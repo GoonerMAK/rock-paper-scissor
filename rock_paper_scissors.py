@@ -1,8 +1,11 @@
 import random
+import mediapipe
 import cv2
 import cvzone
 from cvzone.HandTrackingModule import HandDetector
 import time
+from playsound import playsound
+import threading
 
 cap = cv2.VideoCapture(0)
 cap.set(3, 640)
@@ -15,8 +18,24 @@ stateResult = False
 startGame = False
 scores = [0, 0]  # [AI, Player]
 
+
+def Startplay():
+    playsound('Resources/Countdown RPS.mp3')
+
+def win():
+    playsound('Resources/Winning RPS.mp3')
+
+def lose():
+    playsound('Resources/Losing RPS.mp3')
+
+def draw():
+    playsound('Resources/Draw RPS.mp3')
+
+
+
 while True:
     imgBG = cv2.imread("Resources/BG.png")
+
     success, img = cap.read()
 
     imgScaled = cv2.resize(img, (0, 0), None, 0.875, 0.875)
@@ -26,9 +45,10 @@ while True:
     hands, img = detector.findHands(imgScaled)  # with draw
 
     if startGame:
-
         if stateResult is False:
+
             timer = time.time() - initialTime
+
             cv2.putText(imgBG, str(int(timer)), (605, 435), cv2.FONT_HERSHEY_PLAIN, 6, (255, 0, 255), 4)
 
             if timer > 3:
@@ -46,6 +66,7 @@ while True:
                     if fingers == [0, 1, 1, 0, 0]:
                         playerMove = 3
 
+
                     randomNumber = random.randint(1, 3)
                     imgAI = cv2.imread(f'Resources/{randomNumber}.png', cv2.IMREAD_UNCHANGED)
                     imgBG = cvzone.overlayPNG(imgBG, imgAI, (149, 310))
@@ -55,12 +76,22 @@ while True:
                             (playerMove == 2 and randomNumber == 1) or \
                             (playerMove == 3 and randomNumber == 2):
                         scores[1] += 1
+                        x = threading.Thread(target=win)
+                        x.start()
 
                     # AI Wins
-                    if (playerMove == 3 and randomNumber == 1) or \
+                    elif (playerMove == 3 and randomNumber == 1) or \
                             (playerMove == 1 and randomNumber == 2) or \
                             (playerMove == 2 and randomNumber == 3):
                         scores[0] += 1
+                        y = threading.Thread(target=lose)
+                        y.start()
+
+                    else:
+                        z = threading.Thread(target=draw)
+                        z.start()
+
+
 
     imgBG[234:654, 795:1195] = imgScaled
 
